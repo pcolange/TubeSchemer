@@ -7,19 +7,19 @@ TS9v1AudioProcessor::TS9v1AudioProcessor()
                       {
                           std::make_unique<AudioParameterFloat> ("drive",            // parameterID
                                                                  "Drive",            // parameter name
-                                                                  1.0f,              // minimum value
-                                                                  10.0f,              // maximum value
-                                                                  5.0f),             // default value
+                                                                  0.0f,              // minimum value
+                                                                  1.0f,              // maximum value
+                                                                  0.7f),             // default value
                           std::make_unique<AudioParameterFloat> ("tone",            // parameterID
                                                                  "Tone",            // parameter name
-                                                                  1.0f,              // minimum value
-                                                                  10.0f,              // maximum value
-                                                                  5.0f),             // default value
+                                                                  0.0f,              // minimum value
+                                                                  1.0f,              // maximum value
+                                                                  0.5f),             // default value
                           std::make_unique<AudioParameterFloat> ("level",            // parameterID
                                                                  "Level",            // parameter name
-                                                                  1.0f,              // minimum value
-                                                                  10.0f,              // maximum value
-                                                                  5.0f),             // default value
+                                                                  0.0f,              // minimum value
+                                                                  1.0f,              // maximum value
+                                                                  0.7f),             // default value
                       }),
 #ifndef JucePlugin_PreferredChannelConfigurations
       AudioProcessor (BusesProperties()
@@ -34,18 +34,7 @@ TS9v1AudioProcessor::TS9v1AudioProcessor()
 {
 	driveParameter = parameters.getRawParameterValue ("drive");
 	toneParameter  = parameters.getRawParameterValue ("tone");
-	levelParameter  = parameters.getRawParameterValue ("level");
-    /*formatManager.registerBasicFormats();
-    //juce::File file("C:/Users/phili/Desktop/Melodies of the Dead-Master.wav");
-    juce::File file("C:/Users/phili/Desktop/Filter/AC30 Live 2.wav");
-    auto* reader = formatManager.createReaderFor(file);
-    if (reader != nullptr)
-    {
-        std::unique_ptr<juce::AudioFormatReaderSource> newSource(new juce::AudioFormatReaderSource(reader, true));
-        transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
-        readerSource.reset(newSource.release());
-        transportSource.start();
-    }*/
+	levelParameter  = parameters.getRawParameterValue ("level");    
 }
 
 TS9v1AudioProcessor::~TS9v1AudioProcessor()
@@ -181,7 +170,7 @@ void TS9v1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     dsp::ProcessContextNonReplacing<float> context(xf1_block_ch0, yf1_block_ch0);
     filter1.process(context);
 
-    float R2 = 51.E3f + (*driveParameter / 10.0f - 1.0f/10.0f) * 500.E3f;
+    float R2 = 51.E3f + (*driveParameter) * 500.E3f;
     float Is = 1E-14f;
     float nvt = 26.E-3f;
 
@@ -205,13 +194,12 @@ void TS9v1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     
     // The final output is xf1+xf2
     buffer.addFrom(0, 0, yf1_buffer.getReadPointer(0), buffer.getNumSamples(), 1.0f);
-    buffer.applyGain(*levelParameter / 10.0f - 1.0f/10.0f); // ten is the max value of the level slider
+    buffer.applyGain(*levelParameter); // ten is the max value of the level slider
 
     dsp::AudioBlock<float> xf3_block(buffer);
     auto xf3_block_ch0 = xf3_block.getSingleChannelBlock(0);
     dsp::ProcessContextReplacing<float> nnncontext(xf3_block_ch0);
-    if(ts9_toggle || ts808_toggle)
-       filter4.process(nnncontext);
+    filter4.process(nnncontext);
 
     buffer.copyFrom(1, 0, buffer.getReadPointer(0), buffer.getNumSamples());
     

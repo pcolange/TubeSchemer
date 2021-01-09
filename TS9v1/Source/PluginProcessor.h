@@ -91,12 +91,11 @@ public:
         az.at(2) = az2;
     }
 
-
     void updateFilterState() {
 
         {
 			float R1 = 4700.0f;
-			float R2 = 51.E3f + *driveParameter * 500.E3f;
+			float R2 = 51.E3f + (*driveParameter) * 500.E3f;
 			float C1 = 0.047E-6f;
 			float C2 = 51.E-12f;
             std::array<float, 3> num = { 0.0f, C1 * R2, 0.0f };
@@ -118,8 +117,8 @@ public:
             filter2.coefficients = *newCoefficients;
         }
         {
-            float Rf = 1000.0f;
-            float R = 20000.0f * (1.0f - (*toneParameter / 10.0f - 1.0f/10.0f));
+            float Rf = 1.E3f;
+            float R = 20.E3f * (1.0f - *toneParameter);
             float R3 = 220.0f;
             float C2 = 0.22E-6f;
             std::array<float, 3> num = { 0.0f, C2 * Rf, 0.0f };
@@ -130,8 +129,8 @@ public:
             filter3.coefficients = *newCoefficients;
         }
         {
-            float R1 = 470.0f;// ts9_toggle ? 470.0f : 100.0f; // else ts-808 or dont care
-            float R2 = ts9_toggle ? 100.E3f : 10.E3f; // else ts-808 or dont care
+            float R1 = model_toggle ? 470.0f : 100.0f; // true TS9, false TS808
+            float R2 = model_toggle ? 100.E3f : 10.E3f;
             float C = 10.0E-6f;
             std::array<float, 3> num = { 0.0f, C * R2, 0.0f };
             std::array<float, 3> den = { 0.0f, C * (R1 + R2), 1.0f };
@@ -142,20 +141,10 @@ public:
         }
     };
 
-    void setTS9() {
-        ts9_toggle = true;
-        ts808_toggle = false;
+    void toggleModel() {
+        model_toggle = !model_toggle;
     }
 
-    void setTS808() {
-        ts9_toggle = false;
-        ts808_toggle = true;
-    }
-
-    void setTSMINE() {
-        ts9_toggle = false;
-        ts808_toggle = false;
-    }
 
 private:
     
@@ -165,8 +154,7 @@ private:
     std::atomic<float>* toneParameter  = nullptr;
     std::atomic<float>* levelParameter  = nullptr;
 
-    bool ts9_toggle = false;
-    bool ts808_toggle = false;
+    bool model_toggle = true; // true: TS9, false: TS808
 
     using FilterBand = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
     dsp::IIR::Filter<float> filter1;
