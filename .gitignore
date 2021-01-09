@@ -338,3 +338,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/TS9v1/TS9v1.jucer
+/TS9v1/JuceLibraryCode
+/TS9v1/Builds/VisualStudio2019
