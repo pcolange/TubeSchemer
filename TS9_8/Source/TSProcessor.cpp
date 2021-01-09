@@ -1,9 +1,9 @@
-#include "PluginProcessor.h"
-#include "PluginEditor.h"
+#include "TSProcessor.h"
+#include "TSEditor.h"
 
 //==============================================================================
-TS9v1AudioProcessor::TS9v1AudioProcessor()
-        : parameters (*this, nullptr, Identifier ("TS9v1"),
+TSAudioProcessor::TSAudioProcessor()
+        : parameters (*this, nullptr, Identifier ("TS"),
                       {
                           std::make_unique<AudioParameterFloat> ("drive",            // parameterID
                                                                  "Drive",            // parameter name
@@ -37,17 +37,17 @@ TS9v1AudioProcessor::TS9v1AudioProcessor()
 	levelParameter  = parameters.getRawParameterValue ("level");    
 }
 
-TS9v1AudioProcessor::~TS9v1AudioProcessor()
+TSAudioProcessor::~TSAudioProcessor()
 {
 }
 
 //==============================================================================
-const juce::String TS9v1AudioProcessor::getName() const
+const juce::String TSAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool TS9v1AudioProcessor::acceptsMidi() const
+bool TSAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -56,7 +56,7 @@ bool TS9v1AudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool TS9v1AudioProcessor::producesMidi() const
+bool TSAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -65,7 +65,7 @@ bool TS9v1AudioProcessor::producesMidi() const
    #endif
 }
 
-bool TS9v1AudioProcessor::isMidiEffect() const
+bool TSAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -74,36 +74,36 @@ bool TS9v1AudioProcessor::isMidiEffect() const
    #endif
 }
 
-double TS9v1AudioProcessor::getTailLengthSeconds() const
+double TSAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int TS9v1AudioProcessor::getNumPrograms()
+int TSAudioProcessor::getNumPrograms()
 {
     return 1;
 }
 
-int TS9v1AudioProcessor::getCurrentProgram()
+int TSAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void TS9v1AudioProcessor::setCurrentProgram (int index)
+void TSAudioProcessor::setCurrentProgram (int index)
 {
 }
 
-const juce::String TS9v1AudioProcessor::getProgramName (int index)
+const juce::String TSAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void TS9v1AudioProcessor::changeProgramName (int index, const juce::String& newName)
+void TSAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
 }
 
 //==============================================================================
-void TS9v1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void TSAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     current_sample_rate = static_cast<float>(sampleRate);
 
@@ -121,14 +121,14 @@ void TS9v1AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
 }
 
-void TS9v1AudioProcessor::releaseResources()
+void TSAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool TS9v1AudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool TSAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -151,7 +151,7 @@ bool TS9v1AudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) co
 }
 #endif
 
-void TS9v1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void TSAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();
@@ -206,25 +206,25 @@ void TS9v1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
 }
 
 //==============================================================================
-bool TS9v1AudioProcessor::hasEditor() const
+bool TSAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* TS9v1AudioProcessor::createEditor()
+juce::AudioProcessorEditor* TSAudioProcessor::createEditor()
 {
-    return new TS9v1AudioProcessorEditor (*this, parameters);
+    return new TSAudioProcessorEditor (*this, parameters);
 }
 
 //==============================================================================
-void TS9v1AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void TSAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
         auto state = parameters.copyState();
         std::unique_ptr<juce::XmlElement> xml (state.createXml());
         copyXmlToBinary (*xml, destData);
 }
 
-void TS9v1AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void TSAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
 	std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
 
@@ -237,5 +237,5 @@ void TS9v1AudioProcessor::setStateInformation (const void* data, int sizeInBytes
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new TS9v1AudioProcessor();
+    return new TSAudioProcessor();
 }

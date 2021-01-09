@@ -1,24 +1,14 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include <JuceHeader.h>
 
 //==============================================================================
-/**
-*/
-class TS9v1AudioProcessor  : public juce::AudioProcessor
+class TSAudioProcessor  : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    TS9v1AudioProcessor();
-    ~TS9v1AudioProcessor() override;
+    TSAudioProcessor();
+    ~TSAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -165,5 +155,5 @@ private:
     AudioProcessorValueTreeState parameters;
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TS9v1AudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TSAudioProcessor)
 };

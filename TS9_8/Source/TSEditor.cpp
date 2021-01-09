@@ -1,8 +1,8 @@
-#include "PluginProcessor.h"
-#include "PluginEditor.h"
+#include "TSProcessor.h"
+#include "TSEditor.h"
 
 //==============================================================================
-TS9v1AudioProcessorEditor::TS9v1AudioProcessorEditor (TS9v1AudioProcessor& p, AudioProcessorValueTreeState& vts)
+TSAudioProcessorEditor::TSAudioProcessorEditor (TSAudioProcessor& p, AudioProcessorValueTreeState& vts)
     : AudioProcessorEditor (&p), parameters(vts), audioProcessor (p), LookAndFeel_V4()
 {
     // Make sure that before the constructor has finished, you've set the
@@ -106,12 +106,12 @@ TS9v1AudioProcessorEditor::TS9v1AudioProcessorEditor (TS9v1AudioProcessor& p, Au
 
 }
 
-TS9v1AudioProcessorEditor::~TS9v1AudioProcessorEditor()
+TSAudioProcessorEditor::~TSAudioProcessorEditor()
 {
 }
 
 //==============================================================================
-void TS9v1AudioProcessorEditor::paint (juce::Graphics& g)
+void TSAudioProcessorEditor::paint (juce::Graphics& g)
 {
 
     Font logo_font = Font("Bebas Neue", 128.0f, Font::plain);
@@ -166,7 +166,7 @@ void TS9v1AudioProcessorEditor::paint (juce::Graphics& g)
     g.drawText(MODEL, nine_x, text_area_y, text_area_w, text_area_h, Justification::left);
 }
 
-void TS9v1AudioProcessorEditor::resized()
+void TSAudioProcessorEditor::resized()
 {
     auto r = getLocalBounds();
 
