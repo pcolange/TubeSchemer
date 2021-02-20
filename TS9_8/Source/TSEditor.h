@@ -10,7 +10,7 @@ class KnobLookAndFeel : public LookAndFeel_V4
 public:
     KnobLookAndFeel() {
 		File desktop = File::getSpecialLocation(File::SpecialLocationType::userDesktopDirectory);
-		File ts808_knob_image_file = desktop.getFullPathName() + "/JUCEProjects/TubeScreamer/Media/TS808Knob.png";
+		File ts808_knob_image_file = desktop.getFullPathName() + "/JUCEProjects/TubeSchemer/Media/TS808Knob.png";
 		knob_img = ImageCache::getFromFile(ts808_knob_image_file);
     }
   

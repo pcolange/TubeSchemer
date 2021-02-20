@@ -104,14 +104,21 @@ TSAudioProcessorEditor::~TSAudioProcessorEditor()
 void TSAudioProcessorEditor::paint (juce::Graphics& g)
 {
 
-    Font logo_font = Font("Bebas Neue", 96.0f, Font::plain);
-    String TS("TUBE  ");
-    String MODEL("SCREAM");
+    Font logo_font = Font("Bebas Neue", 86.0f, Font::plain);
+    String TS("Tube  ");
+    String MODEL("Schemer");
 
 	g.fillAll(juce::Colour::fromRGB(48, 182, 116));
 	drive_slider.setLookAndFeel(&TS8knobLookAndFeel);
 	tone_slider.setLookAndFeel(&TS8knobLookAndFeel);
 	level_slider.setLookAndFeel(&TS8knobLookAndFeel);
+
+    File desktop = File::getSpecialLocation(File::SpecialLocationType::userDesktopDirectory);
+    File textureImageFile = desktop.getFullPathName() + "/JUCEProjects/TubeSchemer/Media/MetalTexture.png";
+    Image bgImg = ImageCache::getFromFile(textureImageFile);
+    Rectangle<float> targetArea(getWidth(), getHeight());
+    g.setOpacity(0.20f);
+    g.drawImage(bgImg, targetArea, RectanglePlacement::Flags::xLeft | RectanglePlacement::Flags::yTop);
 
     g.setColour (juce::Colours::white);
 
