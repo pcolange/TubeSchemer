@@ -45,7 +45,7 @@ public:
 
     void updateFilterState() {
 
-		float Fs = current_sample_rate;
+		float Fs = currentSampleRate;
 		float Fs2 = std::powf(Fs, 2.0f);
         
         {
@@ -67,7 +67,7 @@ public:
             az2 = 1.0f;
 
             auto* newCoefficients = new juce::dsp::IIR::Coefficients<float>(bz2, bz1, bz0, az2, az1, az0);
-            drive_filter.coefficients = *newCoefficients;
+            driveFilter.coefficients = *newCoefficients;
 
         }
 
@@ -91,14 +91,9 @@ public:
             az2 = 1.0f;
 
             auto* newCoefficients = new juce::dsp::IIR::Coefficients<float>(bz2, bz1, bz0, az2, az1, az0);
-            tone_filter.coefficients = *newCoefficients;
+            toneFilter.coefficients = *newCoefficients;
         }
     };
-
-    void toggleModel() {
-        model_toggle = !model_toggle;
-    }
-
 
 private:
 
@@ -118,20 +113,18 @@ private:
     float C4 = 0.22E-6f;
     float Ctone = 0.22E-6f;
     
-    float current_sample_rate = 44100.0f;
+    float currentSampleRate = 44100.0f;
 
-    dsp::Oversampling<float> diode_over_sampler{ 2, 1, dsp::Oversampling<float>::filterHalfBandFIREquiripple, false };
-    dsp::Oversampling<float> input_over_sampler{ 2, 1, dsp::Oversampling<float>::filterHalfBandFIREquiripple, false };
+    int overSampleRatio = 1; // 2^overSampleRatio
+
+    dsp::Oversampling<float> overSampler{ 2, overSampleRatio, dsp::Oversampling<float>::filterHalfBandFIREquiripple, true };
 
     std::atomic<float>* driveParameter = nullptr;
     std::atomic<float>* toneParameter  = nullptr;
     std::atomic<float>* levelParameter  = nullptr;
 
-    bool model_toggle = true; // true: TS9, false: TS808
-
-    using FilterBand = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
-    dsp::IIR::Filter<float> drive_filter;
-    dsp::IIR::Filter<float> tone_filter;
+    dsp::IIR::Filter<float> driveFilter;
+    dsp::IIR::Filter<float> toneFilter;
 
     AudioProcessorValueTreeState parameters;
 

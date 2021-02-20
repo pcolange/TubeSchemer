@@ -105,22 +105,19 @@ void TSAudioProcessor::changeProgramName (int index, const juce::String& newName
 //==============================================================================
 void TSAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    current_sample_rate = static_cast<float>(sampleRate);
+    currentSampleRate = static_cast<float>(sampleRate);
 
     dsp::ProcessSpec spec{ sampleRate, uint32(samplesPerBlock), uint32(getTotalNumOutputChannels()) };
 
-    drive_filter.reset();
-    drive_filter.prepare(spec);
-    tone_filter.reset();
-    tone_filter.prepare(spec);
+    driveFilter.reset();
+    driveFilter.prepare(spec);
+    toneFilter.reset();
+    toneFilter.prepare(spec);
     
     updateFilterState();
 
-    diode_over_sampler.reset();
-    diode_over_sampler.initProcessing(samplesPerBlock);
-
-    input_over_sampler.reset();
-    input_over_sampler.initProcessing(samplesPerBlock);
+    overSampler.reset();
+    overSampler.initProcessing(samplesPerBlock);
 }
 
 void TSAudioProcessor::releaseResources()
@@ -162,36 +159,36 @@ void TSAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    AudioBuffer<float> mod_buffer(1, buffer.getNumSamples());
     
-    dsp::AudioBlock<float> buffer_block(buffer);
-    dsp::AudioBlock<float> mod_block(mod_buffer);
+    dsp::AudioBlock<float> bufferBlock(buffer);
     
-    dsp::ProcessContextNonReplacing<float> context1(buffer_block.getSingleChannelBlock(0), mod_block.getSingleChannelBlock(0));
-    dsp::ProcessContextReplacing<float> context2(buffer_block.getSingleChannelBlock(0));
+    auto overSampledBlock = overSampler.processSamplesUp(bufferBlock);
     
-    drive_filter.process(context1);
+    AudioBuffer<float> upsampleCopy(1, buffer.getNumSamples()*2.0f);
+    dsp::AudioBlock<float> upsampleModBlock(upsampleCopy);
+
+    dsp::ProcessContextNonReplacing<float> filterContext(overSampledBlock, upsampleModBlock);
+    dsp::ProcessContextReplacing<float> context2(bufferBlock);
+    
+    driveFilter.process(filterContext);
     
     float R2 = Rf_drive + (*driveParameter) * Rpot_drive;
     float Is = 1E-14f;
     float nvt = 26.E-3f;
 
-    auto buffer_over_sampled_block = input_over_sampler.processSamplesUp(buffer_block);
-    auto buffer_over_sampled_ptr = buffer_over_sampled_block.getChannelPointer(0);
-    auto diode_block = diode_over_sampler.processSamplesUp(mod_block);
-    auto diode_block_ptr = diode_block.getChannelPointer(0);
-
-    for (int i = 0; i < diode_block.getNumSamples(); ++i) {
-		auto U = nvt * asinh(diode_block_ptr[i] / (2.0f * Is * R2));
-		if (std::fabs(U) > std::fabs(diode_block_ptr[i])) {
-		   U = diode_block_ptr[i];
+    auto upsample_mod_block_ptr = upsampleModBlock.getChannelPointer(0);
+    auto upsample_block_ptr = overSampledBlock.getChannelPointer(0);
+    for (int i = 0; i < upsampleModBlock.getNumSamples(); ++i) {
+		auto U = nvt * asinh(upsample_mod_block_ptr[i] / (2.0f * Is * R2));
+		if (std::fabs(U) > std::fabs(upsample_mod_block_ptr[i])) {
+		   U = upsample_mod_block_ptr[i];
 		}
-	    buffer_over_sampled_ptr[i] += U;
+	    upsample_block_ptr[i] += U;
     }
 
-    input_over_sampler.processSamplesDown(buffer_block);
+    overSampler.processSamplesDown(bufferBlock);
 
-    tone_filter.process(context2); 
+    toneFilter.process(context2); 
 
     buffer.applyGain(*levelParameter); // ten is the max value of the level slider
     buffer.copyFrom(1, 0, buffer.getReadPointer(0), buffer.getNumSamples());

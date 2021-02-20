@@ -104,8 +104,8 @@ TSAudioProcessorEditor::~TSAudioProcessorEditor()
 void TSAudioProcessorEditor::paint (juce::Graphics& g)
 {
 
-    Font logo_font = Font("Bebas Neue", 128.0f, Font::plain);
-    String TS("TUBE");
+    Font logo_font = Font("Bebas Neue", 96.0f, Font::plain);
+    String TS("TUBE  ");
     String MODEL("SCREAM");
 
 	g.fillAll(juce::Colour::fromRGB(48, 182, 116));
