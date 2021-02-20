@@ -115,7 +115,8 @@ private:
     
     float currentSampleRate = 44100.0f;
 
-    int overSampleRatio = 1; // 2^overSampleRatio
+    int overSampleRate = 2; // 2^overoverSampleRatio
+    int overSampleRatio = log(overSampleRate) / log(2); 
 
     dsp::Oversampling<float> overSampler{ 2, overSampleRatio, dsp::Oversampling<float>::filterHalfBandFIREquiripple, true };
 

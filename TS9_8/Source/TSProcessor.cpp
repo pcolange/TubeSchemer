@@ -164,7 +164,7 @@ void TSAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     
     auto overSampledBlock = overSampler.processSamplesUp(bufferBlock);
     
-    AudioBuffer<float> upsampleCopy(1, buffer.getNumSamples()*2.0f);
+    AudioBuffer<float> upsampleCopy(1, buffer.getNumSamples() * overSampleRate);
     dsp::AudioBlock<float> upsampleModBlock(upsampleCopy);
 
     dsp::ProcessContextNonReplacing<float> filterContext(overSampledBlock, upsampleModBlock);
