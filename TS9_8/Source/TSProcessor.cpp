@@ -109,16 +109,18 @@ void TSAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
     dsp::ProcessSpec spec{ sampleRate, uint32(samplesPerBlock), uint32(getTotalNumOutputChannels()) };
 
-    filter1.reset();
-    filter1.prepare(spec);
-    filter2.reset();
-    filter2.prepare(spec);
-    filter3.reset();
-    filter3.prepare(spec);
-    filter4.reset();
-    filter4.prepare(spec);
+    drive_filter.reset();
+    drive_filter.prepare(spec);
+    tone_filter.reset();
+    tone_filter.prepare(spec);
+    
     updateFilterState();
 
+    diode_over_sampler.reset();
+    diode_over_sampler.initProcessing(samplesPerBlock);
+
+    input_over_sampler.reset();
+    input_over_sampler.initProcessing(samplesPerBlock);
 }
 
 void TSAudioProcessor::releaseResources()
@@ -160,49 +162,39 @@ void TSAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    AudioBuffer<float> yf1_buffer(1, buffer.getNumSamples());
-
-    dsp::AudioBlock<float> xf1_block(buffer);
-    dsp::AudioBlock<float> yf1_block(yf1_buffer);
+    AudioBuffer<float> mod_buffer(1, buffer.getNumSamples());
     
-    auto xf1_block_ch0 = xf1_block.getSingleChannelBlock(0);
-    auto yf1_block_ch0 = yf1_block.getSingleChannelBlock(0);
-    dsp::ProcessContextNonReplacing<float> context(xf1_block_ch0, yf1_block_ch0);
-    filter1.process(context);
-
-    float R2 = 51.E3f + (*driveParameter) * 500.E3f;
+    dsp::AudioBlock<float> buffer_block(buffer);
+    dsp::AudioBlock<float> mod_block(mod_buffer);
+    
+    dsp::ProcessContextNonReplacing<float> context1(buffer_block.getSingleChannelBlock(0), mod_block.getSingleChannelBlock(0));
+    dsp::ProcessContextReplacing<float> context2(buffer_block.getSingleChannelBlock(0));
+    
+    drive_filter.process(context1);
+    
+    float R2 = Rf_drive + (*driveParameter) * Rpot_drive;
     float Is = 1E-14f;
     float nvt = 26.E-3f;
 
-    auto* sig = buffer.getReadPointer(0);
-	auto* vdi = yf1_buffer.getWritePointer(0);
-    for (int i = 0; i < buffer.getNumSamples(); ++i) {
-		auto U = nvt * asinh(vdi[i] / (2.0f * Is * R2));
-		if (std::fabs(U) > std::fabs(vdi[i])) {
-		   U = vdi[i];
+    auto buffer_over_sampled_block = input_over_sampler.processSamplesUp(buffer_block);
+    auto buffer_over_sampled_ptr = buffer_over_sampled_block.getChannelPointer(0);
+    auto diode_block = diode_over_sampler.processSamplesUp(mod_block);
+    auto diode_block_ptr = diode_block.getChannelPointer(0);
+
+    for (int i = 0; i < diode_block.getNumSamples(); ++i) {
+		auto U = nvt * asinh(diode_block_ptr[i] / (2.0f * Is * R2));
+		if (std::fabs(U) > std::fabs(diode_block_ptr[i])) {
+		   U = diode_block_ptr[i];
 		}
-		vdi[i] = U + sig[i];
+	    buffer_over_sampled_ptr[i] += U;
     }
-    
-    yf1_block_ch0 = yf1_block.getSingleChannelBlock(0);
-    dsp::ProcessContextReplacing<float> ncontext(yf1_block_ch0);
-    filter2.process(ncontext); // produces xf1
-    
-    xf1_block_ch0 = xf1_block.getSingleChannelBlock(0);
-    dsp::ProcessContextNonReplacing<float> nncontext(yf1_block_ch0, xf1_block_ch0);
-    filter3.process(nncontext); // produces xf2
-    
-    // The final output is xf1+xf2
-    buffer.addFrom(0, 0, yf1_buffer.getReadPointer(0), buffer.getNumSamples(), 1.0f);
+
+    input_over_sampler.processSamplesDown(buffer_block);
+
+    tone_filter.process(context2); 
+
     buffer.applyGain(*levelParameter); // ten is the max value of the level slider
-
-    dsp::AudioBlock<float> xf3_block(buffer);
-    auto xf3_block_ch0 = xf3_block.getSingleChannelBlock(0);
-    dsp::ProcessContextReplacing<float> nnncontext(xf3_block_ch0);
-    filter4.process(nnncontext);
-
     buffer.copyFrom(1, 0, buffer.getReadPointer(0), buffer.getNumSamples());
-    
 }
 
 //==============================================================================

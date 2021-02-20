@@ -8,18 +8,10 @@ using namespace juce;
 class KnobLookAndFeel : public LookAndFeel_V4
 {
 public:
-	// model = true selects TS9 style knob
-	// model = false selects TS808 style knob
-    KnobLookAndFeel(bool model) {
+    KnobLookAndFeel() {
 		File desktop = File::getSpecialLocation(File::SpecialLocationType::userDesktopDirectory);
-		File ts9_knob_image_file = desktop.getFullPathName() + "/JUCEProjects/TubeScreamer/Media/knob_ts9.png";
-		File ts808_knob_image_file = desktop.getFullPathName() + "/JUCEProjects/TubeScreamer/Media/knob_ts808.png";
-		if (model) {
-			knob_img =ImageCache::getFromFile(ts9_knob_image_file);
-	    }
-		else {
-			knob_img = ImageCache::getFromFile(ts808_knob_image_file);
-		}
+		File ts808_knob_image_file = desktop.getFullPathName() + "/JUCEProjects/TubeScreamer/Media/TS808Knob.png";
+		knob_img = ImageCache::getFromFile(ts808_knob_image_file);
     }
   
     void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
@@ -93,8 +85,7 @@ private:
 
     TSAudioProcessor& audioProcessor;
 
-	KnobLookAndFeel TS9knobLookAndFeel{ true };
-	KnobLookAndFeel TS8knobLookAndFeel{ false };
+	KnobLookAndFeel TS8knobLookAndFeel;
 
     Slider drive_slider;
     Label drive_label;
@@ -114,8 +105,6 @@ private:
 	Label signature_label;
 
     AudioProcessorValueTreeState& parameters;
-
-	TextButton model_toggle; // State -> true: ts9, false: ts808
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TSAudioProcessorEditor)
 };

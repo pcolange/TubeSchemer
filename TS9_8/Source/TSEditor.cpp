@@ -9,19 +9,9 @@ TSAudioProcessorEditor::TSAudioProcessorEditor (TSAudioProcessor& p, AudioProces
     // editor's size to whatever you need it to be.
     setSize(400, 600);
 
-    // Both buttons are mutually exclusive
-    addAndMakeVisible(model_toggle);
-    model_toggle.setToggleState(true, NotificationType::dontSendNotification);
-    model_toggle.setClickingTogglesState(true);
-    model_toggle.onClick = [this] {
-        audioProcessor.toggleModel();
-        audioProcessor.updateFilterState();
-        repaint();
-    };
-
     addAndMakeVisible(drive_slider);
     drive_slider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-    drive_slider.setLookAndFeel(&TS9knobLookAndFeel);
+    drive_slider.setLookAndFeel(&TS8knobLookAndFeel);
     drive_slider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     drive_slider.setNormalisableRange(NormalisableRange<double>(0.0, 1.0));
     drive_slider.setValue(7.0);
@@ -47,7 +37,7 @@ TSAudioProcessorEditor::TSAudioProcessorEditor (TSAudioProcessor& p, AudioProces
 
     addAndMakeVisible(tone_slider);
     tone_slider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-    tone_slider.setLookAndFeel(&TS9knobLookAndFeel);
+    tone_slider.setLookAndFeel(&TS8knobLookAndFeel);
     tone_slider.setTextValueSuffix("");
     tone_slider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     tone_slider.setNormalisableRange(NormalisableRange<double>(0.0, 1.0));
@@ -74,7 +64,7 @@ TSAudioProcessorEditor::TSAudioProcessorEditor (TSAudioProcessor& p, AudioProces
 
     addAndMakeVisible(level_slider);
     level_slider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-    level_slider.setLookAndFeel(&TS9knobLookAndFeel);
+    level_slider.setLookAndFeel(&TS8knobLookAndFeel);
     level_slider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     level_slider.setNormalisableRange(NormalisableRange<double>(0.0, 1.0));
     level_slider.setValue(7.0);
@@ -98,11 +88,11 @@ TSAudioProcessorEditor::TSAudioProcessorEditor (TSAudioProcessor& p, AudioProces
     level_value_label.setColour(Label::ColourIds::textColourId, Colours::black);
     level_value_label.setJustificationType(Justification::centred);
 
-    addAndMakeVisible(signature_label);
+    /*addAndMakeVisible(signature_label);
     signature_label.setText("by PHILIP COLANGELO", NotificationType::dontSendNotification);
     signature_label.setFont(Font("Inconsolata", 18.0f, Font::plain));
     signature_label.setColour(Label::ColourIds::textColourId, Colours::black);
-    signature_label.setJustificationType(Justification::left);
+    signature_label.setJustificationType(Justification::left);*/
 
 }
 
@@ -115,26 +105,14 @@ void TSAudioProcessorEditor::paint (juce::Graphics& g)
 {
 
     Font logo_font = Font("Bebas Neue", 128.0f, Font::plain);
-    String TS("TS  ");
-    String MODEL;
+    String TS("TUBE");
+    String MODEL("SCREAM");
 
-    if (model_toggle.getToggleState()) {
-        g.fillAll(juce::Colour::fromRGB(50, 168, 82));
-        drive_slider.setLookAndFeel(&TS9knobLookAndFeel);
-        tone_slider.setLookAndFeel(&TS9knobLookAndFeel);
-        level_slider.setLookAndFeel(&TS9knobLookAndFeel);
-        MODEL = "NINE";
-    }
-    else {
-        g.fillAll(juce::Colour::fromRGB(48, 182, 116));
-        drive_slider.setLookAndFeel(&TS8knobLookAndFeel);
-        tone_slider.setLookAndFeel(&TS8knobLookAndFeel);
-        level_slider.setLookAndFeel(&TS8knobLookAndFeel);
-        MODEL = "EIGHT";
-    }
+	g.fillAll(juce::Colour::fromRGB(48, 182, 116));
+	drive_slider.setLookAndFeel(&TS8knobLookAndFeel);
+	tone_slider.setLookAndFeel(&TS8knobLookAndFeel);
+	level_slider.setLookAndFeel(&TS8knobLookAndFeel);
 
-    model_toggle.setAlpha(0.0f);
-    
     g.setColour (juce::Colours::white);
 
     g.setFont(logo_font);
@@ -155,11 +133,8 @@ void TSAudioProcessorEditor::paint (juce::Graphics& g)
     //float text_area_x = (getWidth() - text_area_w) / 2.0f; 
     float text_area_y = getHeight() * 0.025f;
 
-    model_toggle.setBounds(nine_x, text_area_y + 25, button_width, text_area_h - 60);
-   
     g.setOpacity(0.9f);
-    if(!model_toggle.getToggleState())
-      g.drawRoundedRectangle(border, 10.0f, 15.0f);
+    g.drawRoundedRectangle(border, 10.0f, 15.0f);
     g.setColour(Colours::black);
     g.drawText(TS, ts_x, text_area_y, text_area_w, text_area_h, Justification::left);
     g.setColour(Colours::white);
@@ -169,9 +144,6 @@ void TSAudioProcessorEditor::paint (juce::Graphics& g)
 void TSAudioProcessorEditor::resized()
 {
     auto r = getLocalBounds();
-
-    //ts9_button.setBounds(r.getX() + 25, r.getY() + 25, 125, 35);
-    //ts808_button.setBounds(r.getX() + 25, r.getY() + 25 + ts9_button.getHeight(), 125, 35);
 
     int knob_y_offset = 75;
 
