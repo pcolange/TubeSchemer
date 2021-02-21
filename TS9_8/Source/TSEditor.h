@@ -15,14 +15,13 @@ public:
     }
   
     void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
-        const float rotaryStartAngle, const float rotaryEndAngle, Slider& slider) override {	
+        const float rotaryStartAngle, const float rotaryEndAngle, Slider& slider) override {
 
 		if (knob_img.isValid())
-		{
-			const double rotation = (slider.getValue()
-			- slider.getMinimum())
-			/ (slider.getMaximum()
-			- slider.getMinimum());
+		{ 
+			float valueToUse = sliderPos; 
+
+			const double rotation = (valueToUse - slider.getMinimum()) / (slider.getMaximum() - slider.getMinimum());
 			
 			const int frames = knob_img.getHeight() / knob_img.getWidth();
 			const int frameId = (int)ceil(rotation * ((double)frames - 1.0));
@@ -34,7 +33,7 @@ public:
 
 			float min = -145.0f * MathConstants<float>::pi / 180.0f;
 			float max = 145.0f * MathConstants<float>::pi / 180.0f;
-			float rad = jmap<float>(static_cast<float>(slider.getValue() / slider.getMaximum()), min, max);
+			float rad = jmap<float>(static_cast<float>(valueToUse / slider.getMaximum()), min, max);
 			
 		    AffineTransform rotator;
 
@@ -59,7 +58,7 @@ public:
 			
 			g.setColour(Colours::white);
 			
-			g.drawFittedText(String("No Image"), text_bounds.getSmallestIntegerContainer(),
+			g.drawFittedText(String("Image Not Found"), text_bounds.getSmallestIntegerContainer(),
 			Justification::horizontallyCentred | Justification::centred, 1);
 		}
     }

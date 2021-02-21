@@ -7,19 +7,17 @@ TSAudioProcessor::TSAudioProcessor()
                       {
                           std::make_unique<AudioParameterFloat> ("drive",            // parameterID
                                                                  "Drive",            // parameter name
-                                                                  0.0f,              // minimum value
-                                                                  1.0f,              // maximum value
-                                                                  0.7f),             // default value
-                          std::make_unique<AudioParameterFloat> ("tone",            // parameterID
-                                                                 "Tone",            // parameter name
-                                                                  0.0f,              // minimum value
-                                                                  1.0f,              // maximum value
-                                                                  0.5f),             // default value
+                                                                  NormalisableRange<float>(driveRangeMin, driveRangeMax, 0.001f, driveSkewFactor), // range and skew
+                                                                  driveSkewMidPoint),     // default value
+                          std::make_unique<AudioParameterFloat> ("tone",             // parameterID
+                                                                 "Tone",             // parameter name
+                                                                  NormalisableRange<float>(toneRangeMin, toneRangeMax, 0.001f, toneSkewFactor), // range and skew
+                                                                  toneSkewMidPoint),     // default value
                           std::make_unique<AudioParameterFloat> ("level",            // parameterID
                                                                  "Level",            // parameter name
                                                                   0.0f,              // minimum value
                                                                   1.0f,              // maximum value
-                                                                  0.7f),             // default value
+                                                                  0.5f),             // default value
                       }),
 #ifndef JucePlugin_PreferredChannelConfigurations
       AudioProcessor (BusesProperties()
@@ -34,7 +32,7 @@ TSAudioProcessor::TSAudioProcessor()
 {
 	driveParameter = parameters.getRawParameterValue ("drive");
 	toneParameter  = parameters.getRawParameterValue ("tone");
-	levelParameter  = parameters.getRawParameterValue ("level");    
+	levelParameter  = parameters.getRawParameterValue ("level"); 
 }
 
 TSAudioProcessor::~TSAudioProcessor()
@@ -108,7 +106,6 @@ void TSAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     currentSampleRate = static_cast<float>(sampleRate);
 
     dsp::ProcessSpec spec{ sampleRate, uint32(samplesPerBlock), uint32(getTotalNumOutputChannels()) };
-
     driveFilter.reset();
     driveFilter.prepare(spec);
     toneFilter.reset();
@@ -118,6 +115,9 @@ void TSAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
     overSampler.reset();
     overSampler.initProcessing(samplesPerBlock);
+
+    //smoothedValue.reset(currentSampleRate, 0.001);
+    //smoothedValue.setTargetValue(toneSkewMidPoint);
 }
 
 void TSAudioProcessor::releaseResources()
@@ -159,23 +159,25 @@ void TSAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    
     dsp::AudioBlock<float> bufferBlock(buffer);
-    
     auto overSampledBlock = overSampler.processSamplesUp(bufferBlock);
-    
-    AudioBuffer<float> upsampleCopy(2, buffer.getNumSamples() * overSampleRate);
+    AudioBuffer<float> upsampleCopy(2, buffer.getNumSamples() * overSampler.getOversamplingFactor());
     dsp::AudioBlock<float> upsampleModBlock(upsampleCopy);
 
-    dsp::ProcessContextNonReplacing<float> filterContext(overSampledBlock.getSingleChannelBlock(0), upsampleModBlock.getSingleChannelBlock(0));
-    dsp::ProcessContextReplacing<float> context2(bufferBlock.getSingleChannelBlock(0));
+    size_t channelToUse = size_t(0);
+    auto overSampledBlockChannel = overSampledBlock.getSingleChannelBlock(channelToUse);
+    auto upsampledModBlockChannel = upsampleModBlock.getSingleChannelBlock(channelToUse);
+    dsp::ProcessContextNonReplacing<float> driveContext(overSampledBlockChannel, upsampledModBlockChannel);
     
-    driveFilter.process(filterContext);
+    auto bufferBlockChannel = bufferBlock.getSingleChannelBlock(channelToUse);
+    dsp::ProcessContextReplacing<float> toneContext(bufferBlockChannel);
+    
+    driveFilter.process(driveContext);
     
     float R2 = Rf_drive + (*driveParameter) * Rpot_drive;
     float Is = 1E-14f;
     float nvt = 26.E-3f;
-
+          
     auto upsample_mod_block_ptr = upsampleModBlock.getChannelPointer(0);
     auto upsample_block_ptr = overSampledBlock.getChannelPointer(0);
     for (int i = 0; i < upsampleModBlock.getNumSamples(); ++i) {
@@ -188,9 +190,9 @@ void TSAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
 
     overSampler.processSamplesDown(bufferBlock);
 
-    toneFilter.process(context2); 
+    toneFilter.process(toneContext); 
 
-    buffer.applyGain(*levelParameter); // ten is the max value of the level slider
+    buffer.applyGain(*levelParameter); 
     buffer.copyFrom(1, 0, buffer.getReadPointer(0), buffer.getNumSamples());
 }
 
