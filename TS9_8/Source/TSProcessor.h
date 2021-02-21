@@ -72,8 +72,12 @@ public:
         }
 
         {
+           // float smoothedTone = smoothedValue.getCurrentValue();
+           //smoothedValue.setTargetValue(*toneParameter);
+           // float Rpot1 = Rpot_tone * smoothedTone;
+           // float Rpot2 = Rpot_tone * (1.0f - smoothedTone);
             float Rpot1 = Rpot_tone * (*toneParameter);
-            float Rpot2 = Rpot_tone * (1.0f - *toneParameter);
+            float Rpot2 = Rpot_tone * (toneRangeMax - *toneParameter);
             
             float bz2 =  2.0f * Ctone * R10k * R220 * Rpot1 * Fs + 2.0f * Ctone * R10k * R220 * Rpot2 * Fs + 2.0f * Ctone * R10k * Rf_tone * Rpot1 * Fs + 2.0f * Ctone * R10k * Rpot1 * Rpot2 * Fs + R10k * Rpot1 + R10k * Rpot2;
             float bz1 =  2.0f * R10k * Rpot1 + 2.0f * R10k * Rpot2;
@@ -94,11 +98,22 @@ public:
             toneFilter.coefficients = *newCoefficients;
         }
     };
+    
+    const float driveRangeMin = 0.0f;
+    const float driveRangeMax = 1.0f;
+    const float driveSkewMidPoint = 0.5f;
+    const float driveSkewFactor = std::log (0.5f) / std::log ((driveSkewMidPoint - driveRangeMin) / (driveRangeMax - driveRangeMin));
+    
+    const float toneRangeMin = 0.0f;
+    const float toneRangeMax = 1.0f;
+    const float toneSkewMidPoint = 0.8f;
+    const float toneSkewFactor = std::log (0.5f) / std::log ((toneSkewMidPoint - toneRangeMin) / (toneRangeMax - toneRangeMin));
+
 
 private:
 
     // Circuit values for the OpAmp drive section
-    float Rpot_drive = 500E3f;
+    float Rpot_drive = 550E3f; // normally 500 
     float Rf_drive = 51E3f;
     float Cf = 51E-12f;
     float R1 = 4700.0f;
@@ -115,10 +130,9 @@ private:
     
     float currentSampleRate = 44100.0f;
 
-    int overSampleRate = 2; // 2^overoverSampleRatio
-    int overSampleRatio = log(overSampleRate) / log(2); 
+    const int overSampleRatio = 1;
 
-    dsp::Oversampling<float> overSampler{ 2, overSampleRatio, dsp::Oversampling<float>::filterHalfBandFIREquiripple, true };
+    dsp::Oversampling<float> overSampler{ getTotalNumOutputChannels(), overSampleRatio, dsp::Oversampling<float>::filterHalfBandFIREquiripple, true };
 
     std::atomic<float>* driveParameter = nullptr;
     std::atomic<float>* toneParameter  = nullptr;
@@ -128,6 +142,8 @@ private:
     dsp::IIR::Filter<float> toneFilter;
 
     AudioProcessorValueTreeState parameters;
+
+    LinearSmoothedValue<float> smoothedValue;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TSAudioProcessor)

@@ -5,89 +5,92 @@
 TSAudioProcessorEditor::TSAudioProcessorEditor (TSAudioProcessor& p, AudioProcessorValueTreeState& vts)
     : AudioProcessorEditor (&p), parameters(vts), audioProcessor (p), LookAndFeel_V4()
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
     setSize(400, 600);
 
-    addAndMakeVisible(drive_slider);
     drive_slider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     drive_slider.setLookAndFeel(&TS8knobLookAndFeel);
     drive_slider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
-    drive_slider.setNormalisableRange(NormalisableRange<double>(0.0, 1.0));
-    drive_slider.setValue(7.0);
-    drive_slider.setDoubleClickReturnValue(true, 5);
+    drive_slider.setValue(audioProcessor.driveSkewMidPoint);
+    drive_slider.setDoubleClickReturnValue(true, audioProcessor.driveSkewMidPoint);
     drive_slider.onValueChange = [this] {
-		drive_value_label.setText(String::toDecimalStringWithSignificantFigures(drive_slider.getValue() * 10.0, 2), NotificationType::dontSendNotification);
+        auto value = drive_slider.getValue();
+        auto valueToDisplay = drive_slider.valueToProportionOfLength(value) * 10.0;
+		drive_value_label.setText(String::toDecimalStringWithSignificantFigures(valueToDisplay, 2), NotificationType::dontSendNotification);
         audioProcessor.updateFilterState();
     };
 	
-    driveAttachment.reset (new AudioProcessorValueTreeState::SliderAttachment (parameters, "drive", drive_slider));
-
-    addAndMakeVisible(drive_label);
-    drive_label.setText("DRIVE", juce::NotificationType::dontSendNotification);
-    drive_label.setFont(Font("Segoe UI", 28.0f, 1));
-    drive_label.setColour(Label::ColourIds::textColourId, Colours::black);
-    drive_label.setJustificationType(Justification::centred);
-
-    addAndMakeVisible(drive_value_label);
-    drive_value_label.setText(String::toDecimalStringWithSignificantFigures(drive_slider.getValue() * 10.0, 2), NotificationType::dontSendNotification);
-    drive_value_label.setFont(Font("Segoe UI", 20.0f, 1));
-    drive_value_label.setColour(Label::ColourIds::textColourId, Colours::black);
-    drive_value_label.setJustificationType(Justification::centred);
-
-    addAndMakeVisible(tone_slider);
     tone_slider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     tone_slider.setLookAndFeel(&TS8knobLookAndFeel);
     tone_slider.setTextValueSuffix("");
     tone_slider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
-    tone_slider.setNormalisableRange(NormalisableRange<double>(0.0, 1.0));
-    tone_slider.setValue(5.0);
-    tone_slider.setDoubleClickReturnValue(true, 5);
+    tone_slider.setValue(audioProcessor.toneSkewMidPoint);
+    tone_slider.setDoubleClickReturnValue(true, audioProcessor.toneSkewMidPoint);
     tone_slider.onValueChange = [this] {
-		tone_value_label.setText(String::toDecimalStringWithSignificantFigures(tone_slider.getValue() * 10.0, 2), NotificationType::dontSendNotification);
+        auto value = tone_slider.getValue();
+        auto valueToDisplay = tone_slider.valueToProportionOfLength(value) * 10.0;
+		tone_value_label.setText(String::toDecimalStringWithSignificantFigures(valueToDisplay, 2), NotificationType::dontSendNotification);
         audioProcessor.updateFilterState();
     };
 
-    toneAttachment.reset (new AudioProcessorValueTreeState::SliderAttachment (parameters, "tone", tone_slider));
-
-    addAndMakeVisible(tone_label);
-    tone_label.setText("TONE", juce::NotificationType::dontSendNotification);
-    tone_label.setFont(Font("Segoe UI", 24.0f, 1));
-    tone_label.setColour(Label::ColourIds::textColourId, Colours::black);
-    tone_label.setJustificationType(Justification::centred);
-
-    addAndMakeVisible(tone_value_label);
-    tone_value_label.setText(String::toDecimalStringWithSignificantFigures(tone_slider.getValue() * 10.0, 2), NotificationType::dontSendNotification);
-    tone_value_label.setFont(Font("Segoe UI", 18.0f, 1));
-    tone_value_label.setColour(Label::ColourIds::textColourId, Colours::black);
-    tone_value_label.setJustificationType(Justification::centred);
-
-    addAndMakeVisible(level_slider);
     level_slider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     level_slider.setLookAndFeel(&TS8knobLookAndFeel);
     level_slider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     level_slider.setNormalisableRange(NormalisableRange<double>(0.0, 1.0));
-    level_slider.setValue(7.0);
-    level_slider.setDoubleClickReturnValue(true, 5);
+    level_slider.setValue(0.5);
+    level_slider.setDoubleClickReturnValue(true, 0.5);
     level_slider.onValueChange = [this] {
 		level_value_label.setText(String::toDecimalStringWithSignificantFigures(level_slider.getValue() * 10.0, 2), NotificationType::dontSendNotification);
         audioProcessor.updateFilterState();
     };
 
-    levelAttachment.reset (new AudioProcessorValueTreeState::SliderAttachment (parameters, "level", level_slider));
+    drive_label.setText("DRIVE", juce::NotificationType::dontSendNotification);
+    drive_label.setFont(Font("Segoe UI", 28.0f, 1));
+    drive_label.setColour(Label::ColourIds::textColourId, Colours::black);
+    drive_label.setJustificationType(Justification::centred);
 
-    addAndMakeVisible(level_label);
+    tone_label.setText("TONE", juce::NotificationType::dontSendNotification);
+    tone_label.setFont(Font("Segoe UI", 24.0f, 1));
+    tone_label.setColour(Label::ColourIds::textColourId, Colours::black);
+    tone_label.setJustificationType(Justification::centred);
+
     level_label.setText("LEVEL", juce::NotificationType::dontSendNotification);
     level_label.setFont(Font("Segoe UI", 28.0f, 1));
     level_label.setColour(Label::ColourIds::textColourId, Colours::black);
     level_label.setJustificationType(Justification::centred);
 
-    addAndMakeVisible(level_value_label);
+    double driveValue = drive_slider.getValue();
+    float driveValueToDisplay = drive_slider.valueToProportionOfLength(driveValue) * 10.0f;
+    drive_value_label.setText(String::toDecimalStringWithSignificantFigures(driveValueToDisplay, 2), NotificationType::dontSendNotification);
+    drive_value_label.setFont(Font("Segoe UI", 20.0f, 1));
+    drive_value_label.setColour(Label::ColourIds::textColourId, Colours::black);
+    drive_value_label.setJustificationType(Justification::centred);
+
+    double toneValue = tone_slider.getValue();
+    float toneValueToDisplay = tone_slider.valueToProportionOfLength(toneValue) * 10.0f;
+    tone_value_label.setText(String::toDecimalStringWithSignificantFigures(toneValueToDisplay, 2), NotificationType::dontSendNotification);
+    tone_value_label.setFont(Font("Segoe UI", 18.0f, 1));
+    tone_value_label.setColour(Label::ColourIds::textColourId, Colours::black);
+    tone_value_label.setJustificationType(Justification::centred);
+
     level_value_label.setText(String::toDecimalStringWithSignificantFigures(level_slider.getValue() * 10.0, 2), NotificationType::dontSendNotification);
     level_value_label.setFont(Font("Segoe UI", 20.0f, 1));
     level_value_label.setColour(Label::ColourIds::textColourId, Colours::black);
     level_value_label.setJustificationType(Justification::centred);
 
+    addAndMakeVisible(drive_slider);
+    addAndMakeVisible(drive_label);
+    addAndMakeVisible(drive_value_label);
+    addAndMakeVisible(tone_slider);
+    addAndMakeVisible(tone_label);
+    addAndMakeVisible(tone_value_label);
+    addAndMakeVisible(level_slider);
+    addAndMakeVisible(level_label);
+    addAndMakeVisible(level_value_label);
+   
+    driveAttachment.reset (new AudioProcessorValueTreeState::SliderAttachment (parameters, "drive", drive_slider));
+    toneAttachment.reset (new AudioProcessorValueTreeState::SliderAttachment (parameters, "tone", tone_slider));
+    levelAttachment.reset (new AudioProcessorValueTreeState::SliderAttachment (parameters, "level", level_slider));
+    
     /*addAndMakeVisible(signature_label);
     signature_label.setText("by PHILIP COLANGELO", NotificationType::dontSendNotification);
     signature_label.setFont(Font("Inconsolata", 18.0f, Font::plain));
@@ -109,9 +112,6 @@ void TSAudioProcessorEditor::paint (juce::Graphics& g)
     String MODEL("Schemer");
 
 	g.fillAll(juce::Colour::fromRGB(48, 182, 116));
-	drive_slider.setLookAndFeel(&TS8knobLookAndFeel);
-	tone_slider.setLookAndFeel(&TS8knobLookAndFeel);
-	level_slider.setLookAndFeel(&TS8knobLookAndFeel);
 
     File desktop = File::getSpecialLocation(File::SpecialLocationType::userDesktopDirectory);
     File textureImageFile = desktop.getFullPathName() + "/JUCEProjects/TubeSchemer/Media/MetalTexture.png";
