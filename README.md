@@ -14,5 +14,4 @@ While JUCE is a cross-platform application framework, I have only tested and run
 
 ## TODO list
 - I left out an ON/OFF (power) switch, a common feature in other plugins. It might be a nice touch to add one at some point.
-- Most of the tone knob audible changes occur from 9->10, this causes the processing to change rapidly and so some audible 'clicks' are heard when playing and changing the knob at the same time.
 - As a VST, the plugin parameters (drive, tone, level) can be assigned to automation but the plugin lacks MIDI assignment which would be useful for external control. 
